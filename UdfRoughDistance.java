@@ -16,7 +16,7 @@ public class UdfRoughDistance extends UDF {
         double x = (lon2 - lon1) * Math.cos((lat1+lat2)/2.0);
         double y = (lat2 - lat1);
         return r*Math.sqrt(x*x+y*y);
-    }
+    } // end evaluate
 
     /* The above formulas are called the "equirectangular approximation", 
      * to be used for small distances, if performance is more important 
