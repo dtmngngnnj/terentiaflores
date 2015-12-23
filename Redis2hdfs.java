@@ -1,15 +1,11 @@
-
-//import java.io.*;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import redis.clients.jedis.Jedis;
-
 
 public class Redis2hdfs { 
 
@@ -50,18 +46,18 @@ public class Redis2hdfs {
         jedis.close();
     }
 
-
     public static void sleep(int time) { 
         try {
             Thread.sleep( 1000* time) ; 
-
         } catch (InterruptedException ie) {
-            System.err.println("An InterruptedException was thrown in my sleep!!!");
+            System.err.println("An InterruptedException was thrown in my sleep!");
         }
     }
 
-
-    public static void pop(Jedis jedis, FileSystem fs, String outputPath) throws java.io.IOException { 
+    // Pop a key from the queue, and fetch the corresponding value from the buffer
+    // and write it to HDFS.
+    public static void pop(Jedis jedis, FileSystem fs, String outputPath) 
+    throws java.io.IOException { 
 
         // pop 1 value from the QUEUE
         String key=jedis.rpop("TR_QUEUE"); 
@@ -86,8 +82,7 @@ public class Redis2hdfs {
         ) { 
             bw.write(value);
         }
-        System.out.println("Wrote file: " + key + " to directory: " + outputPath);
-        //System.out.println("Value: " + value.substring(0,300));
+        System.out.println("Wrote: " + outFile);
 
         // remove the BUFFER from redis
         long jv=jedis.hdel("TR_BUFFER",key);
