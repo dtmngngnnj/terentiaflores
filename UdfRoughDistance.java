@@ -3,11 +3,7 @@ import org.apache.hadoop.hive.ql.exec.UDF;
 
 public class UdfRoughDistance extends UDF {
 
-    /**
-     * Equirectangular approximation, to be used for small distances, 
-     * if performance is more important than accuracy. 
-     * See: http://www.movable-type.co.uk/scripts/latlong.html
-     */
+    /** Calculate the approximate distance between two points */ 
     public double evaluate(double lat1, double lon1, double lat2, double lon2) {
 
         // convert to radians
@@ -21,5 +17,11 @@ public class UdfRoughDistance extends UDF {
         double y = (lat2 - lat1);
         return r*Math.sqrt(x*x+y*y);
     }
+
+    /* The above formulas are called the "equirectangular approximation", 
+     * to be used for small distances, if performance is more important 
+     * than accuracy. 
+     * See: http://www.movable-type.co.uk/scripts/latlong.html
+     */
 }
 

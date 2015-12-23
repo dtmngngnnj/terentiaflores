@@ -1,6 +1,9 @@
 #!/bin/bash 
 
-# java:  compile a java file, and if it went well run it
+S=UdfRoughDistance.java
+T=${S%.java}.class
+E=${S%.java}
+
 export HH=/opt/hadoop-2.7.1/share/hadoop
 export HI=/opt/apache-hive-1.2.1-bin
 export CLASSPATH=$CLASSPATH\
@@ -13,13 +16,7 @@ export CLASSPATH=$CLASSPATH\
 :$HI/lib/lib/hive-contrib-1.2.1.jar\
 :$HI/lib/hive-exec-1.2.1.jar
 
-S=UdfRoughDistance.java
-T=${S%.java}.class
-E=${S%.java}
-
-echo "."
-echo "."
-echo "."
+echo "."; echo "."; echo "."
 
 # compile
 javac $S
@@ -27,11 +24,11 @@ javac $S
 # check if class file was produced
 if [ ! -e $T ] 
 then
-    echo "##jcr: '$T' doesn't exist, can't JAR it." 
+    echo "## '$T' doesn't exist, can't JAR it." 
     exit 1
 fi
 
-# if class is younger then source, then package it
+# if class is younger then source, then jar it
 S_AGE=`stat -c %Y $S`
 T_AGE=`stat -c %Y $T`
 

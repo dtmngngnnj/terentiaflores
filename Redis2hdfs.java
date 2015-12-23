@@ -30,13 +30,13 @@ public class Redis2hdfs {
         Configuration conf = new Configuration();
         conf.addResource(new Path("/opt/hadoop/etc/hadoop/core-site.xml"));
         conf.addResource(new Path("/opt/hadoop/etc/hadoop/hdfs-site.xml"));
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem filesystem = FileSystem.get(conf);
 
-        // start reading from REDIS
+        // keep reading from Redis until the flag is lowered
         do {
             long qlen=jedis.llen("TR_QUEUE");
             if (qlen>0) { 
-                pop(jedis,fs,outputPath); 
+                pop(jedis,filesystem,outputPath); 
             } else { 
                 System.out.print(".");
                 sleep(5); 
@@ -54,41 +54,45 @@ public class Redis2hdfs {
         }
     }
 
-    // Pop a key from the queue, and fetch the corresponding value from the buffer
-    // and write it to HDFS.
-    public static void pop(Jedis jedis, FileSystem fs, String outputPath) 
-    throws java.io.IOException { 
+    // Pop a key from the queue, fetch the corresponding 
+    // value from the buffer and write it to HDFS.
+    public static void pop(Jedis jedis, 
+                           FileSystem filesystem, 
+                           String outputPath
+                           ) throws java.io.IOException { 
 
-        // pop 1 value from the QUEUE
+        // pop 1 value from the queue
         String key=jedis.rpop("TR_QUEUE"); 
         if (key.length()<1) {
             System.err.println("Received empty key");
             return;
         }
         
-        // read the corresponding BUFFER 
+        // read the corresponding buffer 
         String value=jedis.hget("TR_BUFFER",key);
         if ( (value==null) || (value.length()<1) ) {
             System.err.println("Received empty value");
             return;
         }
 
-        // write value to file  on HDFS
+        // write value to file on HDFS
         Path outFile = new Path(outputPath+"/"+key);
-        if (fs.exists(outFile)) throw new IOException("Output already exists");
+        if (filesystem.exists(outFile)) 
+            throw new IOException("Output already exists");
         try( 
-            FSDataOutputStream out = fs.create(outFile); 
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+            FSDataOutputStream out = filesystem.create(outFile); 
+            BufferedWriter bw = new BufferedWriter(
+                                    new OutputStreamWriter(out));
         ) { 
             bw.write(value);
         }
         System.out.println("Wrote: " + outFile);
 
-        // remove the BUFFER from redis
+        // the key/value can now be removed from the buffer 
         long jv=jedis.hdel("TR_BUFFER",key);
         if (jv!=1) {
             System.err.println("HDEL returned "+jv);
             return;
         }
-    }
+    } //end_pop
 }
