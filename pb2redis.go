@@ -20,9 +20,9 @@ import (
 )
 
 const (
-    c_chunk_size      = 32000000 // size of chunks produced 
-    c_max_num_chunk   = 10       // sleep if there are more than 10 chunks in the redis db
-    c_sleeptime_millis= 30000    // sleeptime: half a minute
+    c_chunk_size      = 128000000 // size of a chunk: a bit less than 128 megabyte (which actually is 1.37439e+11 bytes)
+    c_max_num_chunk   = 5         // sleep if there are more than x chunks in the redis db
+    c_sleeptime_millis= 30000     // sleeptime: half a minute
 )
 
 func main() {
@@ -52,7 +52,17 @@ func main() {
     }
     defer conn.Close()
 
-    // improvement: exit if already something in buffer!
+    // refuse to start if already data in buffer!
+    var val int
+    val, err = redis.Int(conn.Do("LLEN", "TR_QUEUE"))
+    if (err!=nil) {
+        fmt.Fprintf(os.Stderr,"Error: %v\n", err)
+        os.Exit(1)
+    }
+    if (val>0) {
+        fmt.Fprintf(os.Stderr,"Error: buffer already contains values!\n")
+        os.Exit(1)
+    }
 
 
     // raise flag, to tell the chunk reader on the other side to stay connected
@@ -153,7 +163,7 @@ func insert_in_redis(conn redis.Conn, buf bytes.Buffer, key string) (err error) 
         return
     }
 
-    // --- left push the key on the TR_QUEUE ------------------------------
+    // --- left push the key onto the TR_QUEUE ------------------------------
     val, err = redis.Int(conn.Do("LPUSH", "TR_QUEUE", key))
     if (err!=nil) { fmt.Printf("Error: %v\n",err); return }
     if (val==0) {
