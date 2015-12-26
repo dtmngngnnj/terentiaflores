@@ -20,9 +20,10 @@ import (
 )
 
 const (
-    c_chunk_size      = 128000000 // size of a chunk: a bit less than 128 megabyte (which actually is 1.37439e+11 bytes)
     c_max_num_chunk   = 5         // sleep if there are more than x chunks in the redis db
     c_sleeptime_millis= 30000     // sleeptime: half a minute
+    c_chunk_size      = 128000000 // size of a chunk: a bit less than 128 megabyte 
+                                  // (128 MB actually is 1.37439e+11 bytes)
 )
 
 func main() {
